@@ -1,0 +1,98 @@
+---
+title: "ggplot2-radar"
+author: "Zhen li"
+date: "2022-10-13"
+output: html_document
+---
+
+## 数据可视化
+
+### 对比图
+
+```{r include=FALSE}
+library(pacman)
+library(data.table)
+p_load(ggplot2,
+       ggradar2,
+       reader,
+       readxl,
+       openxlsx
+)
+```
+
+```{r include=TRUE}
+lm <- read.xlsx("C:/Users/86135/Desktop/R_Data_Science/AA.xlsx")
+str(lm) #解构数据集
+```
+
+```{r}
+lm_subset = lm[lm$Season == 2018 | lm$Season == 2019, ]
+
+lm_subset_agr = aggregate(lm_subset[, 11:ncol(lm_subset)], list(lm_subset$Location), FUN=mean)
+lm_subset_agr = lm_subset_agr[, c("BP", "Foul", "Corner", "Offside", "YellowCard", "ShotAcc", "PassAcc", "FwdPassAcc", "CrossAcc", "GroundDuelWon", "AirDuelWon", "TackleWon")]
+lm_subset_agr[, "group"] = c("AWAY", "HOME")
+
+lm_max = lapply(lm_subset[, c("BP", "Foul", "Corner", "Offside", "YellowCard", "ShotAcc", "PassAcc", "FwdPassAcc", "CrossAcc", "GroundDuelWon", "AirDuelWon", "TackleWon")], max)
+lm_max = as.vector(unlist(lm_max))
+```
+
+- 绘制雷达图
+<!-- 原始数据尺度的雷达图 -->
+```{r}
+ggradar2::ggradar2(lm_subset_agr, fullscore = rep(80, ncol(lm_subset_agr)-1),
+                   grid.min = 0, grid.max = 1, grid.label.size = 6, 
+                   gridline.label = seq(0, 80, 10), gridline.label.type="numeric",
+                   axis.label.size = 6, legend.text.size = 10, axis.label.offset=1.05,
+                   group.line.width = 1, group.point.size = 2)
+```
+
+```{r}
+ggradar2::ggradar2(lm_subset_agr, fullscore = lm_max,
+                   grid.min = 0, grid.max = 1, grid.label.size = 6, 
+                   gridline.label = seq(0, 100, 10), gridline.label.type="percentage",
+                   axis.label.size = 6, legend.text.size = 10, axis.label.offset=1.05,
+                   group.line.width = 1, group.point.size = 2)
+```
+
+- 绘制哑铃图
+将数据转化为指定的格式
+```{r}
+lm_subset_agr_t = as.data.frame(t(lm_subset_agr)[-ncol(lm_subset_agr),])
+colnames(lm_subset_agr_t) = c("AWAY", "HOME")
+lm_subset_agr_t["Score"] = rownames(lm_subset_agr_t)
+lm_subset_agr_melt = as.data.frame(melt(as.data.table(lm_subset_agr_t), id="Score"))
+lm_subset_agr_melt[, "value"] = as.numeric(lm_subset_agr_melt[, "value"])
+lm_subset_agr_melt
+```
+
+哑铃图实际上是点图和线图的组合
+```{r}
+order = as.vector(lm_subset_agr_t["Score"])
+ggplot(lm_subset_agr_melt, aes(x=value, y=Score)) + 
+  geom_line(aes(group=Score)) + 
+  geom_point(aes(color=variable, size=value)) + 
+  labs(x="", y="") + 
+  guides(size="none")
+```
+
+```{r}
+order = lm_subset_agr_t[, "Score"]
+ggplot(lm_subset_agr_melt, aes(x=value, y=Score)) + 
+  geom_line(aes(group=Score)) + 
+  geom_point(aes(color=variable), size=3) + 
+  labs(x="", y="")
+```
+
+- 绘制柱状图
+将数据转化为指定的格式
+```{r}
+colnames(lm_subset_agr_melt) = c("Score", "Position", "Value")
+```
+
+```{r}
+ggplot(lm_subset_agr_melt, aes(x=Score,y=Value,fill=Position)) +  
+  geom_bar(position="dodge", stat="identity") +
+  ylim(0, 80) + 
+  labs(x="", y="")
+```
+

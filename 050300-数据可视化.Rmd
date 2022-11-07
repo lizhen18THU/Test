@@ -1,0 +1,73 @@
+---
+title: "数据可视化"
+author: "Zhen li"
+date: "2022-10-20"
+output: html_document
+---
+
+# 数据可视化
+
+## ggplot2语法结构
+
+### 统计变换stat
+
+ggplot2的第四层是统计变换图层```stat_xxx()```，它通过一些统计变换方法得到数据的某些统计量，并可以在这些统计量的基础上进行绘图。比如```stat_smooth()```计算每一个```x```下的```y```的平均值，并基于所得到的平均值绘制平滑曲线，这与几何对象图层里的```geom_smooth()```功能类似。事实上，统计变换图层```stat_xxx```与几何对象图层```geom_xxx```关系密切，两者相互补充构成了ggplot2图层结构中的重要组成成分。许多几何对象绘制函数```geom_xxx```都需要统计变换函数```stat_xxx```作为前提，比如： 
+
++ ```stat_bin`()```: ```geom_bar()```, ```geom_freqpoly()```, ```geom_histogram()```
++ ```stat_bin2d()```: ```geom_bin2d()```
++ ```stat_bindot()```: ```geom_dotplot()```
++ ```stat_binhex()```: ```geom_hex()```
++ ```stat_quantile()```: ```geom_quantile()```
++ ```stat_sum()```: ```geom_count()```
++ ```stat_smooth()```: ```geom_smooth()```
++ ```stat_boxplot`()```: ```geom_boxplot()```
++ ```stat_contour`()```: ```geom_contour()```  
++ ```stat_qq```:```geom_qq```
+
+  
+在日常使用ggplot2的过程中，我们很少直接调用上述这些统计变换函数来绘制相应的几何对象，而是使用相应的几何对象绘制函数```geom_xxx()```，比如```geom_histogram()```中封装了区间分割和频率统计功能，并在此基础上直接绘制直方图。但了解统计变换图层仍然有其必要性，一方面我们可以对所绘制对象的统计特性有更深的了解，另一方面数据的某些统计特性仍然无法通过几何对象图层表现出来，这时候统计变换图层就成为了几何对象图层的重要补充。这里我们重点关注那些无法通过几何对象图层直观表示的统计变换函数，并讨论如何利用这些统计变换函数来丰富图形内容，主要包括如下几种：
+
++ ```stat_ecdf```能够绘制经验累积分布函数(ECDF)，是分布的另一种可视化方法，与其他依赖密度的可视化(如```geom_histogram()```)相比，经验累积分布函数不需要任何调优参数，并且可以处理连续变量和分类变量，但是需要更多的训练样本才能准确地解释数据分布。
++ ```stat_ellipse()```能够基于[Fox和Weisberg等人](https://socialsciences.mcmaster.ca/jfox/Books/Companion/)提出的方法绘制数据分布椭圆图。
++ ```stat_function```基于已有数据计算并绘制连续的曲线。此函数需要x轴的间距均匀分布，并且默认使用另一条曲线绘制在当前图层上，因此可以比较方便地与其他曲线进行对比。
++ ```stat_summary```可以在每一个给定的```x```或者```y```上计算一些比较直观的计数统计量,比如平均数和中位数等。
++ ```stat_summary2d```, ```stat_summary_hex```和```stat_summary_bin()```是更加灵活版本的```stat_summary```，可以在```x```和```y```等多个维度的组合下计算平均数和中位数等聚合统计量。
++ ```stat_sopke```可以将角度和半径转化为位置
++ ```stat_unique```可以去除所分析数据中的冗余样本
+
+继续以上面所使用的篮球体育数据为例，我们进一步展示统计变换图层对数据统计学特征的直观展示：
+
+```{r include=FALSE, echo=FALSE}
+library(pacman)
+p_load(reader,
+       readxl,
+       openxlsx,
+       tidyverse,
+       dplyr,
+       tidyr,
+       ggplot2,
+       ggthemes,
+       ggsci,
+       ggprism,
+       patchwork
+)
+
+lm <- read.xlsx("C:/Users/86135/Desktop/R_Data_Science/AA.xlsx")
+
+p <- ggplot(data=lm) + 
+  
+      aes(x=BP,y=Shot) +
+  
+      geom_point() +
+
+      facet_wrap(~Team)
+```
+
+```{r}
+p <- p + stat_ellipse()
+p
+```
+
+可以看到，在确定了数据、变量和几何对象后，我们通过```stat_ellipse```进一步对每一个球队数据的椭圆分布特征进行了美学呈现，而这是通过几何对象图层```geom_xxx```所无法完成的。
+
+从上面的介绍中我们可以发现，统计变换图层与几何对象图层之间存在密不可分的关系。尽管我们在前面强调了```geom_xxx```在对数据进行某些方面的统计变换分析时面临诸多局限，但是这并不意味着统计变换图层可以替代几何对象图层。从数据的全角度展示角度而言，两者是相互依赖相辅相成的。所以我们在利用ggplot2绘图的的过程中，可以通过几何对象图层和统计变换图层的配合更加全面地展示数据内部的复杂关系。

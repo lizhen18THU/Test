@@ -1,0 +1,55 @@
+---
+title: "ggplot2-radar"
+author: "Zhen li"
+date: "2022-10-13"
+output: html_document
+---
+
+#导入包
+
+```{r include=FALSE}
+library(pacman)
+library(data.table)
+p_load(ggplot2,
+       ggradar2,
+       reader,
+       readxl,
+       openxlsx
+)
+```
+
+```{r include=TRUE}
+lm <- read.xlsx("C:/Users/86135/Desktop/R_Data_Science/AA.xlsx")
+str(lm) #解构数据集
+```
+
+```{r}
+lm_subset = lm[lm$Season == 2018 | lm$Season == 2019, ]
+lm_max = lapply(lm_subset[, c("BP", "Foul", "Corner", "Offside", "YellowCard", "ShotAcc", "PassAcc", "FwdPassAcc", "CrossAcc", "GroundDuelWon", "AirDuelWon", "TackleWon")], max)
+lm_max = as.vector(unlist(lm_max))
+```
+
+
+```{r}
+lm_subset = lm[lm$Season == 2018 | lm$Season == 2019, ]
+lm_subset_agr = aggregate(lm_subset[, 11:ncol(lm_subset)], list(lm_subset$Location), FUN=mean)
+lm_subset_agr = lm_subset_agr[, c("BP", "Foul", "Corner", "Offside", "YellowCard", "ShotAcc", "PassAcc", "FwdPassAcc", "CrossAcc", "GroundDuelWon", "AirDuelWon", "TackleWon")]
+lm_subset_agr["group"] = c("AWAY", "HOME")
+lm_subset_agr
+```
+
+```{r}
+ggradar2::ggradar2(lm_subset_agr, fullscore = rep(80, ncol(lm_subset_agr)-1),
+                   grid.min = 0, grid.max = 1, grid.label.size = 6, 
+                   gridline.label = seq(0, 80, 10), gridline.label.type="numeric",
+                   axis.label.size = 6, legend.text.size = 10, axis.label.offset=1.05,
+                   group.line.width = 1, group.point.size = 2)
+```
+
+```{r}
+ggradar2::ggradar2(lm_subset_agr, fullscore = lm_max,
+                   grid.min = 0, grid.max = 1, grid.label.size = 6, 
+                   gridline.label = seq(0, 100, 10), gridline.label.type="percentage",
+                   axis.label.size = 6, legend.text.size = 10, axis.label.offset=1.05,
+                   group.line.width = 1, group.point.size = 2)
+```

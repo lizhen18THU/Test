@@ -1,0 +1,81 @@
+---
+title: "ggplot2入门教程"
+author: "Zhen li"
+output: html_document
+---
+
+语法结构
+
+七层结构
+
+代码：
+
+#第一层：数据（Data） 选择要分析的数据集 +ggplot(data = )
+
+#第二层：视觉映射（Aesthetics） 目的是完成x轴变量和y轴变量的选取
+所谓映射，就是数据集中的数据关联到相应的图形属性过程中一种对应关系。
++aes(x = , y = )
+
+#第三层：几何对象（Geometries）
+使用几何函数来指定变量如何在视觉上进行表示（使用点、条、线和阴影区，多边形）
++geom_XXX(...) + ...
+
+#第四层：分面（Facets） +facet_XXX(...)
+
+#第五层：统计变换（Statistics） + stat_XXX(...) + ...
+
+#第六层：坐标系统（Coordinates） + scale_XXX(...) + coord_XXX(...)
+
+#第七层：主题（Theme） + theme(...)
+
+利用ggplot2绘图一定会包含前三个层次，但后四个层次不是每张图都会用到（因为系统已经帮你进行了默认设置）。具体来说就是，从第一层确定数据集，到第二层，确定x轴，y轴分别对应哪个变量，再到第三层决定绘制何种类型的图，就可以画出一个信息完整的图形。
+
+
+
+#导入包
+
+```{r include=FALSE}
+library(pacman)
+p_load(reader,
+       readxl,
+       openxlsx,
+       tidyverse,
+       dplyr,
+       tidyr,
+       ggplot2,
+       ggthemes,
+       ggsci,
+       ggprism,
+       patchwork
+)
+```
+
+#读取数据
+
+```{r include=FALSE}
+lm <- read.xlsx("C:/Users/86135/Desktop/R_Data_Science/AA.xlsx")
+str(lm) #解构数据集
+```
+
+```{r include=FALSE}
+p <- ggplot(data=lm) + 
+  
+      aes(x=BP,y=Shot) +
+  
+      geom_point() +
+
+      facet_wrap(~Team) +
+        
+      stat_ellipse() +
+        
+      #coord_fixed() +
+        
+      theme_classic()
+p
+```
+
+
+```{r include=FALSE}
+df
+```
+
